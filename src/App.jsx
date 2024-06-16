@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import Todo from "./components/Todo";
 import TodoForm from "./components/TodoForm";
@@ -6,8 +6,8 @@ import Search from "./components/Search";
 import Filter from "./components/Filter";
 
 function App() {
-  //Dados
-  const [todos, setTodos] = useState([
+  // Dados iniciais
+  const initialTodos = [
     {
       id: 1,
       text: "Criar funcionalidade x no sistema",
@@ -26,9 +26,23 @@ function App() {
       category: "Estudos",
       isCompleted: false,
     },
-  ]);
+  ];
 
-  //Criando novas tarefas
+  // Função para carregar os todos do localStorage
+  const loadTodosFromLocalStorage = () => {
+    const todosString = localStorage.getItem("todos");
+    return todosString ? JSON.parse(todosString) : initialTodos;
+  };
+
+  // Dados
+  const [todos, setTodos] = useState(loadTodosFromLocalStorage());
+
+  // Salvar os todos no localStorage sempre que houver uma mudança
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  // Criando novas tarefas
   const addTodo = (text, category) => {
     const newTodos = [
       ...todos,
@@ -42,28 +56,24 @@ function App() {
     setTodos(newTodos);
   };
 
-  //Removendo TO-DO
+  // Removendo TO-DO
   const removendoTodo = (id) => {
-    const newTodos = [...todos];
-    const filtroTodos = newTodos.filter((todo) =>
-      todo.id !== id ? todo : null
-    );
-    setTodos(filtroTodos);
+    const newTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(newTodos);
   };
 
-  //atualizando To-do
+  // Atualizando To-do
   const completeTodo = (id) => {
-    const newTodos = [...todos];
-    newTodos.map((todo) =>
-      todo.id === id ? (todo.isCompleted = !todo.isCompleted) : todo
+    const newTodos = todos.map((todo) =>
+      todo.id === id ? { ...todo, isCompleted: !todo.isCompleted } : todo
     );
     setTodos(newTodos);
   };
 
-  //Search
+  // Pesquisar
   const [search, setSearch] = useState("");
 
-  //Filter
+  // Filtro
   const [filter, setFilter] = useState("All");
   const [sort, setSort] = useState("Asc");
 
@@ -71,7 +81,7 @@ function App() {
     <div className="app">
       <h1>Lista de tarefas</h1>
       <Search search={search} setSearch={setSearch} />
-      <Filter Filter={filter} setFilter={setFilter} setSort={setSort} />
+      <Filter filter={filter} setFilter={setFilter} setSort={setSort} />
       <div className="todo-list">
         {todos
           .filter((todo) =>
